@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Training</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <form action="" class="row" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="formFile" class="form-label btn btn-primary" >Import Training</label>
+                <input class="form-control d-none" multiple type="file"  id="formFile" >
+            </div>
+            <div class="fs-5" id="display_name"></div>
+            <button id="button_submit" type="submit" class="btn btn-warning text-white fs-5 fw-bolder">Training</button>
+        </form>
+        <button class="d-none btn btn-sm btn-warning" id="button_show_result" >Refresh Result</button>
+        <pre id="display_code" class="d-none"></pre>
+    </div>
+   <script>
+    document.getElementById("formFile").onchange=(e)=>{
+        e.preventDefault();
+        let name="";
+        for (const iterator of e.target.files) {
+            name+=iterator.name+",";
+        }
+        let url ="{{url}}";
+        document.getElementById("display_code").className="d-none"
+        document.getElementById("button_show_result").className="d-none";
+        document.getElementById("display_name").innerHTML=name;
+        document.getElementById("button_submit").onclick=async(event)=>{
+            event.preventDefault();
+            let formData = new FormData();
+            for (const iterator of e.target.files) {
+                formData.append("files",iterator);
+            }
+            console.log(formData.getAll("files"))
+            fetch(`${url}/upload_file`,{
+                method:"POST",
+                body:formData,
+            }).then(response=>response.json())
+            .then(response=>{
+                console.log(response.content)
+                document.getElementById("button_show_result").className="d-block btn btn-sm btn-warning mt-3 fs-5 text-white fw-bolder";
+                document.getElementById("button_show_result").onclick=(e)=>{
+                    e.preventDefault();
+                    const esc=encodeURIComponent;
+                    let params = {
+                        "file_name":[response.content]
+                    }
+                    fetch(`${url}/logs`,{method:"POST",body:JSON.stringify(params),headers:{"Content-type":"application/json"}}).then(response=>response.json()).then(response=>{
+                        document.getElementById("display_code").className="d-block fs-5"
+                        document.getElementById("display_code").innerHTML=response.q;
+
+                    })
+                }
+            })
+        }
+    }
+   </script> 
+</body>
+</html>
